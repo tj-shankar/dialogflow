@@ -1,7 +1,7 @@
 // See https://github.com/dialogflow/dialogflow-fulfillment-nodejs
 // for Dialogflow fulfillment library docs, samples, and to report issues
 'use strict';
- 
+const fetch = require('node-fetch'); 
 const functions = require('firebase-functions');
 const {WebhookClient} = require('dialogflow-fulfillment');
 const {Card, Suggestion} = require('dialogflow-fulfillment');
@@ -20,7 +20,34 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   function fallback(agent) {
     agent.add(`I didn't understand`);
     agent.add(`I'm sorry, can you try again?`);
-}
+  }
+  
+  function someAsyncCall(searchId) {
+      console.log("SAC-TEST 5 with searchID="+searchId);
+      return fetch('https://jsonplaceholder.typicode.com/users?id='+searchId, {method: 'GET'})
+        .then(response => response.text())
+        .then(response => { 
+            console.log("RESPONSE:"+response);
+            return Promise.resolve(response);
+        }).catch( function(error){
+            console.log('ERROR: ' + error);
+            return Promise.reject(error);
+        });
+   }
+  
+  function jsonholderHandler(agent) {  
+
+    var searchId = request.body.queryResult.parameters.number;
+    return someAsyncCall(searchId)
+    .then( function( message ){
+      agent.add(`You should hear this message `+ message);
+      return Promise.resolve();
+    })
+    .catch( function( err ){
+      agent.add(`Uh oh, something happened.`);
+      return Promise.resolve();  // Don't reject again, or it might not send the reply
+    });
+  }
 
   // // Uncomment and edit to make your own intent handler
   // // uncomment `intentMap.set('your intent name here', yourFunctionHandler);`
@@ -55,6 +82,7 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   let intentMap = new Map();
   intentMap.set('Default Welcome Intent', welcome);
   intentMap.set('Default Fallback Intent', fallback);
+  intentMap.set('jsonholder', jsonholderHandler);
   // intentMap.set('your intent name here', yourFunctionHandler);
   // intentMap.set('your intent name here', googleAssistantHandler);
   agent.handleRequest(intentMap);
