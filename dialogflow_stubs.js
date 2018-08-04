@@ -87,15 +87,33 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   * perform fetch get call to 
   * to obtain 'Show License' cli data
   */
-  function licenseFetchCall(licenses_flag) {
-      console.log("Testing for licenses");
+  function licenseFetchCall(license_flag) {
+      console.log("Testing for licenses "+license_flag);
       return fetch('http://35.233.202.126:5000/exec?ip=35.162.71.116&type=show&cmd=show+license', {method: 'GET'})
         .then(response => response.text())
         .then(response => { 
-            console.log("RESPONSE:"+response);
-            var jsonResp = JSON.parse(response);
-            var licenseCount = jsonResp._data[0];
-            return Promise.resolve(licenseCount);
+          console.log("RESPONSE:"+response);
+          var jsonResp = JSON.parse(response);
+          var message = "Default_license_message";
+
+  
+          //response parsing based on license flag
+          if(license_flag == 'license_count'){
+            message = jsonResp._data[0]; 
+
+          } else if(license_flag == 'license_enabled'){
+            message = "yes license is enabled my frnd";
+
+          } else if(license_flag == 'license_valid'){
+            message = "yes license is valid bro";
+
+          } else {
+            //license_flag is eq license_ap_support
+            message = "some APs are supported !!";
+          }
+
+
+          return Promise.resolve(message);
         }).catch( function(error){
             console.log('ERROR: ' + error);
             return Promise.reject(error);
@@ -122,13 +140,13 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   }
 
  /* INTENT HANDLER
-  * Function: islicense_enabled
+  * Function: license_enabled
   * ---------------------------
   * service Dialogflow intent  
   * for checking if licenses are enabled/valid
   */
-  function islicense_enabled(agent) {
-     return licenseFetchCall('islicense_enabled')
+  function license_enabled(agent) {
+     return licenseFetchCall('license_enabled')
     .then( function( message ){
       agent.add(`License Enabled: `+ message);
       return Promise.resolve();
@@ -140,13 +158,13 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   }
 
  /* INTENT HANDLER
-  * Function: whenlicenses_expire
+  * Function: license_valid
   * ---------------------------
   * service Dialogflow intent  
   * for checking when licenses expire
   */
-  function whenlicenses_expire(agent) {
-     return licenseFetchCall('whenlicenses_expire')
+  function license_valid(agent) {
+     return licenseFetchCall('license_valid')
     .then( function( message ){
       agent.add(`License Expiration Info: `+ message);
       return Promise.resolve();
@@ -158,14 +176,14 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   }
 
  /* INTENT HANDLER
-  * Function: apCount_licenses
+  * Function: license_ap_support
   * ------------------------------
   * service Dialogflow intent  
   * for getting count of APs 
   * supported by licenses
   */
-  function apCount_licenses(agent) {
-     return licenseFetchCall('apCount_licenses')
+  function license_ap_support(agent) {
+     return licenseFetchCall('license_ap_support')
     .then( function( message ){
       agent.add(`Total APs supported by licenses `+ message);
       return Promise.resolve();
@@ -198,13 +216,13 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   }
 
  /* INTENT HANDLER
-  * Function: current_version
+  * Function: version_current
   * ------------------------------
   * service Dialogflow intent  
   * for getting current version
   */
-  function current_version(agent) {
-     return versionFetchCall('current_version')
+  function version_current(agent) {
+     return versionFetchCall('version_current')
     .then( function( message ){
       agent.add(`Current Version: `+ message);
       return Promise.resolve();
@@ -216,13 +234,13 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   }
  
  /* INTENT HANDLER
-  * Function: device_uptime
+  * Function: version_uptime
   * ------------------------------
   * service Dialogflow intent  
   * for getting uptime of the device
   */
-  function device_uptime(agent) {
-     return versionFetchCall('device_uptime')
+  function version_uptime(agent) {
+     return versionFetchCall('version_uptime')
     .then( function( message ){
       agent.add(`Uptime of device: `+ message);
       return Promise.resolve();
@@ -234,14 +252,14 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   }
  
  /* INTENT HANDLER
-  * Function: last_reboot
+  * Function: version_last_reboot
   * ------------------------------
   * service Dialogflow intent  
   * for getting timestamp of 
   * last reboot of the device
   */
-  function last_reboot(agent) {
-     return versionFetchCall('last_reboot')
+  function version_last_reboot(agent) {
+     return versionFetchCall('version_last_reboot')
     .then( function( message ){
       agent.add(`Last Reboot was on: `+ message);
       return Promise.resolve();
@@ -260,7 +278,7 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   */
   function apDatabaseFetchCall(database_flag) {
       console.log("Testing for licenses");
-      return fetch('http://35.233.202.126:5000/exec?ip=35.162.71.116&type=show&cmd=show+apdatabase', {method: 'GET'})
+      return fetch('http://35.233.202.126:5000/exec?ip=35.162.71.116&type=show&cmd=show+ap+database', {method: 'GET'})
         .then(response => response.text())
         .then(response => { 
             console.log("RESPONSE:"+response);
@@ -275,16 +293,16 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   }
 
  /* INTENT HANDLER
-  * Function: apCount_database
+  * Function: ap_database_count
   * ------------------------------
   * service Dialogflow intent  
   * for getting count of APs
   * obtianed from Show ap databses CLI
   */
-  function apCount_database(agent) {
-     return apDatabaseFetchCall('apCount_database')
+  function ap_database_count(agent) {
+     return apDatabaseFetchCall('ap_database_count')
     .then( function( message ){
-      agent.add(`Total Number of APs: `+ message);
+      agent.add(`Total Number of APs in Show ap databse: `+ message);
       return Promise.resolve();
     })
     .catch( function( err ){
@@ -294,14 +312,14 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   }
 
  /* INTENT HANDLER
-  * Function: upAps_count
+  * Function: ap_database_up_count
   * ------------------------------
   * service Dialogflow intent  
   * for getting count of APs
   * whose status is 'Up'
   */
-  function upAps_count(agent) {
-     return apDatabaseFetchCall('upAps_count')
+  function ap_database_up_count(agent) {
+     return apDatabaseFetchCall('ap_database_up_count')
     .then( function( message ){
       agent.add(`Total Number of APs that are Up: `+ message);
       return Promise.resolve();
@@ -313,14 +331,14 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   }
 
  /* INTENT HANDLER
-  * Function: upAps_count
+  * Function: ap_database_down_count
   * ------------------------------
   * service Dialogflow intent  
   * for getting count of APs
   * whose status is 'Down'
   */
-  function downAps_count(agent) {
-     return apDatabaseFetchCall('downAps_count')
+  function ap_database_down_count(agent) {
+     return apDatabaseFetchCall('ap_database_down_count')
     .then( function( message ){
       agent.add(`Total Number of APs that are Down: `+ message);
       return Promise.resolve();
@@ -332,18 +350,18 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   }
 
  /* INTENT HANDLER
-  * Function: md_of_ap
+  * Function: ap_database_md_associated
   * ------------------------------
   * service Dialogflow intent  
   * for getting MD of a user
   * provided AP
   */
-  function md_of_ap(agent) {
+  function ap_database_md_associated(agent) {
     //get AP details from request object
     //parse and send it to the fetch function
 
     //NOTE : an array is getting passed to the fetch async function
-     return apDatabaseFetchCall(['md_of_ap','AP-DATA'])
+     return apDatabaseFetchCall(['ap_database_md_associated','AP-DATA'])
     .then( function( message ){
       agent.add(`MD of AP: `+ message);
       return Promise.resolve();
@@ -355,18 +373,18 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   }
 
  /* INTENT HANDLER
-  * Function: model_of_ap
+  * Function: ap_database_model
   * ------------------------------
   * service Dialogflow intent  
   * for getting model of a user
   * provided AP
   */
-  function model_of_ap(agent) {
+  function ap_database_model(agent) {
     //get AP details from request object
     //parse and send it to the fetch function
 
     //NOTE : an array is getting passed to the fetch async function
-     return apDatabaseFetchCall(['model_of_ap','AP-DATA'])
+     return apDatabaseFetchCall(['ap_database_model','AP-DATA'])
     .then( function( message ){
       agent.add(`Model of AP: `+ message);
       return Promise.resolve();
@@ -399,13 +417,13 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   }
  
  /* INTENT HANDLER
-  * Function: essid_count
+  * Function: ap_essid_count
   * ------------------------------
   * service Dialogflow intent  
   * for getting count of essids
   */
-  function essid_count(agent) {
-     return apEssidFetchCall('essid_count')
+  function ap_essid_count(agent) {
+     return apEssidFetchCall('ap_essid_count')
     .then( function( message ){
       agent.add(`Total Number ESSIDs: `+ message);
       return Promise.resolve();
@@ -417,18 +435,18 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   }
 
  /* INTENT HANDLER
-  * Function: essids_count_of_ap
+  * Function: ap_essid_ap_association
   * ------------------------------
   * service Dialogflow intent  
   * for getting count of essids of a user
   * provided AP
   */
-  function essids_count_of_ap(agent) {
+  function ap_essid_ap_association(agent) {
     //get AP details from request object
     //parse and send it to the fetch function
 
     //NOTE : an array is getting passed to the fetch async function
-     return apEssidFetchCall(['essids_count_of_ap','AP-DATA'])
+     return apEssidFetchCall(['ap_essid_ap_association','AP-DATA'])
     .then( function( message ){
       agent.add(`Total number of ESSIDs for AP: `+ message);
       return Promise.resolve();
@@ -440,18 +458,18 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   }
 
  /* INTENT HANDLER
-  * Function: client_count_of_ap
+  * Function: ap_essid_client_count
   * ------------------------------
   * service Dialogflow intent  
   * for getting count of essids of a user
   * provided AP
   */
-  function client_count_of_ap(agent) {
+  function ap_essid_client_count(agent) {
     //get AP details from request object
     //parse and send it to the fetch function
 
     //NOTE : an array is getting passed to the fetch async function
-     return apEssidFetchCall(['client_count_of_ap','AP-DATA'])
+     return apEssidFetchCall(['ap_essid_client_count','AP-DATA'])
     .then( function( message ){
       agent.add(`Total number of clients for AP: `+ message);
       return Promise.resolve();
@@ -498,8 +516,33 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   let intentMap = new Map();
   intentMap.set('Default Welcome Intent', welcome);
   intentMap.set('Default Fallback Intent', fallback);
+  //JSON Placeholder Intent Map
   intentMap.set('jsonholder', jsonholderHandler);
+  
+  //Show licence intent Map
   intentMap.set('license_count', license_count);
+  intentMap.set('license_count', license_valid);
+  intentMap.set('license_enabled', license_enabled);
+  intentMap.set('license_ap_support', license_ap_support);
+
+  //Show version intent Map
+  intentMap.set('version_current', version_current);
+  intentMap.set('version_uptime', version_uptime);
+  intentMap.set('version_last_reboot', version_last_reboot);
+
+  //Show ap databases Intent Map
+  intentMap.set('ap_database_count', ap_database_count);
+  intentMap.set('ap_database_up_count', ap_database_up_count);
+  intentMap.set('ap_database_down_count', ap_database_down_count);
+  intentMap.set('ap_database_md_associated', ap_database_md_associated);
+  intentMap.set('ap_database_model', ap_database_model);
+
+  //Show ap essid Intent Map
+  intentMap.set('ap_essid_count', ap_essid_count);
+  intentMap.set('ap_essid_client_count', ap_essid_client_count);
+  intentMap.set('ap_essid_ap_association', ap_essid_ap_association);
+
+  //------------------------------ To Be Removed ---------------------------//
   // intentMap.set('your intent name here', yourFunctionHandler);
   // intentMap.set('your intent name here', googleAssistantHandler);
   agent.handleRequest(intentMap);
