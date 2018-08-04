@@ -521,7 +521,7 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   
   //Show licence intent Map
   intentMap.set('license_count', license_count);
-  intentMap.set('license_count', license_valid);
+  intentMap.set('license_valid', license_valid);
   intentMap.set('license_enabled', license_enabled);
   intentMap.set('license_ap_support', license_ap_support);
 
