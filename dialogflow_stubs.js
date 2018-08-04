@@ -403,7 +403,7 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   */
   function apEssidFetchCall(essid_flag) {
       console.log("Testing for licenses");
-      return fetch('http://35.233.202.126:5000/exec?ip=35.162.71.116&type=show&cmd=show+apessid', {method: 'GET'})
+      return fetch('http://35.233.202.126:5000/exec?ip=35.162.71.116&type=show&cmd=show+ap+essid', {method: 'GET'})
         .then(response => response.text())
         .then(response => { 
             console.log("RESPONSE:"+response);
