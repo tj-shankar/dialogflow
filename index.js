@@ -300,22 +300,71 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
     });
   }
 
+ 
  /* FETCH GET CALL
   * Function: apDatabaseFetchCall
   * ---------------------------
   * perform fetch get call to 
   * to obtain 'Show ap database' cli data
   */
-  function apDatabaseFetchCall(database_flag) {
-      console.log("Testing for licenses");
+  function apDatabaseFetchCall(database_arr) {
+      console.log("Testing for Show AP databases");
       return fetch('http://35.233.202.126:5000/exec?ip=35.162.71.116&type=show&cmd=show+ap+database', {method: 'GET'})
         .then(response => response.text())
         .then(response => { 
             console.log("RESPONSE:"+response);
-            //decision flag
-            var jsonResp = JSON.parse(response);
-            var licenseCount = jsonResp._data[0];
-            return Promise.resolve(licenseCount);
+        
+            let obj_ap = JSON.parse(response);
+            var apArray = obj_ap["AP Database"];
+            var message = "Default AP Database Message";
+                
+            if(database_arr[0] == "ap_database_count"){
+              var ap_count = apArray.length;
+              message = "Total Number of APs in Show ap databse is " + ap_count;
+            } else if ( database_arr[0] == "ap_database_up_count") {
+                var apNumUp = 0;
+                for (var entry in apArray){
+                  var ApStatus = apArray[entry]["Status"];
+                  if(ApStatus.includes("Up")){
+                    apNumUp++;
+                  }
+                }
+                message = "Total Number of APs that are Up is " + apNumUp; 
+            } else if ( database_arr[0] == "ap_database_down_count") {
+                var apNumDown = 0;
+                for (entry in apArray) {
+                  ApStatus = apArray[entry]["Status"];
+                  if(!ApStatus.includes("Up"))
+                  {
+                    apNumDown++;
+                  }
+                }
+                message = "Total Number of APs that are Down is " + apNumDown;
+            } else if ( database_arr[0] == "ap_database_md_associated") {
+                var ApName = database_arr[1];
+                message = "Cannot find MD associated with AP " + ApName; 
+                for (entry in apArray) {
+                  var name = apArray[entry]["Name"];
+                  if(name == ApName) {
+                    message = "AP " + ApName + " terminates on MD with IP " + apArray[entry]["Switch IP"];
+                    break;
+                  }
+                }
+                
+            } else {
+                // check for ap_database_model
+                ApName = database_arr[1];
+                message = "Cannot find model of AP " + ApName; 
+                for (entry in apArray) {
+                  name = apArray[entry]["Name"];
+                  if(name == ApName) {
+                    message = "AP " + ApName + " model number is AP-" + apArray[entry]["AP Type"];
+                    break;
+                  }
+                }
+            }
+
+            return Promise.resolve(message);
         }).catch( function(error){
             console.log('ERROR: ' + error);
             return Promise.reject(error);
@@ -330,9 +379,9 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   * obtianed from Show ap databses CLI
   */
   function ap_database_count(agent) {
-     return apDatabaseFetchCall('ap_database_count')
+     return apDatabaseFetchCall(['ap_database_count'])
     .then( function( message ){
-      agent.add(`Total Number of APs in Show ap databse: `+ message);
+      agent.add(message);
       return Promise.resolve();
     })
     .catch( function( err ){
@@ -349,9 +398,10 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   * whose status is 'Up'
   */
   function ap_database_up_count(agent) {
-     return apDatabaseFetchCall('ap_database_up_count')
+      console.log('ap_database_up_count');
+     return apDatabaseFetchCall(['ap_database_up_count'])
     .then( function( message ){
-      agent.add(`Total Number of APs that are Up: `+ message);
+      agent.add(message);
       return Promise.resolve();
     })
     .catch( function( err ){
@@ -368,9 +418,9 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   * whose status is 'Down'
   */
   function ap_database_down_count(agent) {
-     return apDatabaseFetchCall('ap_database_down_count')
+     return apDatabaseFetchCall(['ap_database_down_count'])
     .then( function( message ){
-      agent.add(`Total Number of APs that are Down: `+ message);
+      agent.add(message);
       return Promise.resolve();
     })
     .catch( function( err ){
@@ -391,9 +441,10 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
     //parse and send it to the fetch function
 
     //NOTE : an array is getting passed to the fetch async function
-     return apDatabaseFetchCall(['ap_database_md_associated','AP-DATA'])
+     var apName = request.body.queryResult.parameters.any;
+     return apDatabaseFetchCall(['ap_database_md_associated', apName])
     .then( function( message ){
-      agent.add(`MD of AP: `+ message);
+      agent.add(message);
       return Promise.resolve();
     })
     .catch( function( err ){
@@ -414,9 +465,10 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
     //parse and send it to the fetch function
 
     //NOTE : an array is getting passed to the fetch async function
-     return apDatabaseFetchCall(['ap_database_model','AP-DATA'])
+     var apName = request.body.queryResult.parameters.any;
+     return apDatabaseFetchCall(['ap_database_model', apName])
     .then( function( message ){
-      agent.add(`Model of AP: `+ message);
+      agent.add(message);
       return Promise.resolve();
     })
     .catch( function( err ){
@@ -424,6 +476,7 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
       return Promise.resolve();  // Don't reject again, or it might not send the reply
     });
   }
+
 
 
     /*How many essids do I have?*/
