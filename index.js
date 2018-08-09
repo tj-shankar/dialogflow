@@ -231,14 +231,48 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   * to obtain 'Show version' cli data
   */
   function versionFetchCall(version_flag) {
-      console.log("Testing for licenses");
+      console.log("Testing for the show version command");
       return fetch('http://35.233.202.126:5000/exec?ip=35.162.71.116&type=show&cmd=show+version', {method: 'GET'})
         .then(response => response.text())
         .then(response => { 
             console.log("RESPONSE:"+response);
+            var message = "Default Show version output";
             var jsonResp = JSON.parse(response);
-            var licenseCount = jsonResp._data[0];
-            return Promise.resolve(licenseCount);
+            var version_text = jsonResp._data[0];
+            //initialise variables
+            var version = "not found";
+            var uptime = "not found";
+            var reboot_reason = "not found";
+            
+            //spliting response over newline 
+            var cont = version_text.split("\n");
+            //Parsing version text
+            for (var i in cont){
+
+                if(cont[i].includes("ArubaOS")){
+
+                version = cont[i];
+                } else if(cont[i].includes("Switch uptime")){
+      
+                  uptime = cont[i];
+                } else if(cont[i].includes("Reboot Cause")){
+     
+                  reboot_reason = cont[i];
+                } else {
+                  continue;
+                }
+            }
+
+            //updating response message of Promise
+            if (version_flag == "version_current"){
+                message = version;
+            } else if (version_flag == "version_uptime"){
+                message = uptime;
+            } else {
+                message = reboot_reason;
+            }
+            
+            return Promise.resolve(message);
         }).catch( function(error){
             console.log('ERROR: ' + error);
             return Promise.reject(error);
@@ -272,7 +306,7 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   function version_uptime(agent) {
      return versionFetchCall('version_uptime')
     .then( function( message ){
-      agent.add(`Uptime of device: `+ message);
+      agent.add(message);
       return Promise.resolve();
     })
     .catch( function( err ){
@@ -291,7 +325,7 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   function version_last_reboot(agent) {
      return versionFetchCall('version_last_reboot')
     .then( function( message ){
-      agent.add(`Last Reboot was on: `+ message);
+      agent.add(message);
       return Promise.resolve();
     })
     .catch( function( err ){
@@ -320,7 +354,7 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
                 
             if(database_arr[0] == "ap_database_count"){
               var ap_count = apArray.length;
-              message = "Total Number of APs in Show ap databse is " + ap_count;
+              message = "Total Number of APs is " + ap_count;
             } else if ( database_arr[0] == "ap_database_up_count") {
                 var apNumUp = 0;
                 for (var entry in apArray){
