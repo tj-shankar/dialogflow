@@ -134,15 +134,570 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
       return message;
   }
   
+  /*
+   * license obj parser
+   * for active licenses count
+   */
+       
+        
+   function getActiveLicenses(obj) {
+     
+        var licenseArray = obj["License Table"];
+        var activeLicenses = 0;
+        var d1 = new Date();
+        //console.log("Date is " + d1);
+     
+        //console.log(obj["License Table"]);
+        //console.log(licenseArray);
+        var entry = 0;
+        
+        for (entry in licenseArray) {
+            //console.log("Entry ====== " + entry);
+            //console.log("License key is " + licenseArray[entry].Key);
+            //console.log("license status " + licenseArray[entry].Flags);
+            var licStatus = licenseArray[entry]["Expires(Grace period expiry)"];
+            var flags = licenseArray[entry]["Flags"];
+            //console.log("license expiry " + licenseArray[entry]["Expires(Grace period expiry)"]);
+            //console.log("license type is " + licenseArray[entry]["Service Type"]);
+            var string = licenseArray[entry]["Service Type"];
+            if (!licStatus.includes("Expired") && flags) {
+                        //console.log("Access point license.....");
+                        activeLicenses++;
+                console.log(" License expiry is  + " + licStatus);
+            }
+     
+            if (!licStatus.includes("Expired") && !licStatus.includes("Never")) {
+                        var d2 = new Date(licStatus);
+                        if (d2 < d1) {
+                                        d1 = d2;
+                        }
+                        //console.log(licStatus);
+            }
+        }
+     
+        if (entry === 0) {
+            console.log("There are no entries in license table");
+        } else {
+            entry++;
+            //console.log("There are " + entry + " license entries");
+        }
+     
+        console.log(activeLicenses + " Active licenses enabled");
+        return activeLicenses;
+       
+    }
+  
+  /*
+   * license obj parser
+   * for expired licenses
+   */
+   
+        
+    function getExpiredLicenses(obj) {
+        var licenseArray = obj["License Table"];
+        var expiredLicenses = 0;
+        var d1 = new Date();
+        //console.log("Date is " + d1);
+     
+        //console.log(obj["License Table"]);
+        //console.log(licenseArray);
+        var entry = 0;
+     
+        for (entry in licenseArray) {
+            //console.log("Entry ====== " + entry);
+            //console.log("License key is " + licenseArray[entry].Key);
+            //console.log("license status " + licenseArray[entry].Flags);
+            var licStatus = licenseArray[entry]["Expires(Grace period expiry)"];
+            //console.log("license expiry " + licenseArray[entry]["Expires(Grace period expiry)"]);
+            //console.log("license type is " + licenseArray[entry]["Service Type"]);
+            var string = licenseArray[entry]["Service Type"];
+            if (licStatus.includes("Expired")) {
+                        //console.log("Access point license.....");
+                        expiredLicenses++;
+                //console.log("Access point number....." + apNum);
+            }
+     
+            if (licStatus.includes("Expired") && !licStatus.includes("Never")) {
+                        var d2 = new Date(licStatus);
+                        if (d2 < d1) {
+                                        d1 = d2;
+                        }
+                        //console.log(licStatus);
+            }
+        }
+     
+        if (entry === 0) {
+            console.log("There are no entries in license table");
+        } else {
+            entry++;
+            //console.log("There are " + entry + " license entries");
+        }
+     
+        console.log(expiredLicenses + " expired licenses present");
+        return expiredLicenses;
+    }
+ 
+ /*
+  * License obj parser
+  * for parseLicenseForAP
+  */
+   
+    function parseLicenseForAP(obj)
+    {
+     
+        var licenseArray = obj["License Table"];
+        var apNum = 0;
+        var d1 = new Date();
+        //console.log("Date is " + d1);
+     
+        //console.log(obj["License Table"]);
+        //console.log(licenseArray);
+        var entry = 0;
+     
+        for (entry in licenseArray) {
+            //console.log("Entry ====== " + entry);
+            //console.log("License key is " + licenseArray[entry].Key);
+            //console.log("license status " + licenseArray[entry].Flags);
+            var licStatus = licenseArray[entry]["Expires(Grace period expiry)"];
+            //console.log("license expiry " + licenseArray[entry]["Expires(Grace period expiry)"]);
+            //console.log("license type is " + licenseArray[entry]["Service Type"]);
+            var string = licenseArray[entry]["Service Type"];
+            if (string.includes("Access") && !licStatus.includes("Expired")) {
+                        //console.log("Access point license.....");
+                        apNum = string.replace( /^\D+/g, '');
+                //console.log("Access point number....." + apNum);
+            }
+     
+            if (!licStatus.includes("Expired") && !licStatus.includes("Never")) {
+                        var d2 = new Date(licStatus);
+                        if (d2 < d1) {
+                                        d1 = d2;
+                        }
+                        //console.log(licStatus);
+            }
+        }
+     
+        if (entry === 0) {
+            console.log("There are no entries in license table");
+        } else {
+            entry++;
+            console.log("There are " + entry + " license entries expiring : ");
+        }
+     
+        console.log(apNum + " AP licenses enabled");
+        //console.log("Earliest expiring license is " + d1);
+        return apNum;
+    }
+
+  /*
+   * License Parser for
+   * ACR license
+   */
+    function parseLicenseForACR(obj)
+    {
+     
+        var licenseArray = obj["License Table"];
+        var d1 = new Date();
+        console.log("Date is " + d1);
+     
+        //console.log(obj["License Table"]);
+        //console.log(licenseArray);
+        var entry = 0;
+        var apNum = 0;
+     
+        for (entry in licenseArray) {
+            //console.log("Entry ====== " + entry);
+            //console.log("License key is " + licenseArray[entry].Key);
+            //console.log("license status " + licenseArray[entry].Flags);
+            var licStatus = licenseArray[entry]["Expires(Grace period expiry)"];
+            //console.log("license expiry " + licenseArray[entry]["Expires(Grace period expiry)"]);
+            //console.log("license type is " + licenseArray[entry]["Service Type"]);
+            var string = licenseArray[entry]["Service Type"];
+            if (string.includes("Advanced Cryptography") && !licStatus.includes("Expired")) {
+                        //console.log("Access point license.....");
+                        apNum = string.replace( /^\D+/g, '');
+                //console.log("Access point number....." + apNum);
+            }
+     
+            if (!licStatus.includes("Expired") && !licStatus.includes("Never")) {
+                        var d2 = new Date(licStatus);
+                        if (d2 < d1) {
+                                        d1 = d2;
+                        }
+                        //console.log(licStatus);
+            }
+        }
+     
+        if (entry === 0) {
+            console.log("There are no entries in license table");
+        } else {
+            entry++;
+            console.log("There are " + entry + " license entries");
+        }
+     
+        console.log(apNum + " ACR licenses enabled");
+        return apNum;
+     
+    } 
+
+  /*
+   * Parser for PEF
+   */
+   function parseLicenseForPEF(obj) {
+ 
+    var licenseArray = obj["License Table"];
+    var apNum = 0;
+    var d1 = new Date();
+    //console.log("Date is " + d1);
+ 
+    //console.log(obj["License Table"]);
+    //console.log(licenseArray);
+    var entry = 0;
+ 
+    for (entry in licenseArray) {
+        //console.log("Entry ====== " + entry);
+        //console.log("License key is " + licenseArray[entry].Key);
+        //console.log("license status " + licenseArray[entry].Flags);
+        var licStatus = licenseArray[entry]["Expires(Grace period expiry)"];
+        //console.log("license expiry " + licenseArray[entry]["Expires(Grace period expiry)"]);
+        //console.log("license type is " + licenseArray[entry]["Service Type"]);
+        var string = licenseArray[entry]["Service Type"];
+        if (string.includes("Policy Enforcement") && !licStatus.includes("Expired")) {
+                    //console.log("Access point license.....");
+                    apNum = string.replace( /^\D+/g, '');
+            //console.log("Access point number....." + apNum);
+        }
+ 
+        if (!licStatus.includes("Expired") && !licStatus.includes("Never")) {
+                    var d2 = new Date(licStatus);
+                    if (d2 < d1) {
+                                    d1 = d2;
+                    }
+                    //console.log(licStatus);
+        }
+    }
+ 
+    if (entry === 0) {
+        console.log("There are no entries in license table");
+    } else {
+        entry++;
+        console.log("There are " + entry + " license entries");
+    }
+ 
+    console.log(apNum + " PEF licenses enabled");
+    //console.log("Earliest expiring license is " + d1);
+    return apNum;
+  }
+
+ /*
+  * Parser for RFP
+  */
+  function parseLicenseForRFP(obj) {
+    var licenseArray = obj["License Table"];
+    var apNum = 0;
+    var d1 = new Date();
+    //console.log("Date is " + d1);
+ 
+    //console.log(obj["License Table"]);
+    //console.log(licenseArray);
+    var entry = 0;
+ 
+    for (entry in licenseArray) {
+        //console.log("Entry ====== " + entry);
+        //console.log("License key is " + licenseArray[entry].Key);
+        //console.log("license status " + licenseArray[entry].Flags);
+        var licStatus = licenseArray[entry]["Expires(Grace period expiry)"];
+        //console.log("license expiry " + licenseArray[entry]["Expires(Grace period expiry)"]);
+        //console.log("license type is " + licenseArray[entry]["Service Type"]);
+        var string = licenseArray[entry]["Service Type"];
+        if (string.includes("RF Protect") && !licStatus.includes("Expired")) {
+                    //console.log("Access point license.....");
+                    apNum = string.replace( /^\D+/g, '');
+            //console.log("Access point number....." + apNum);
+        }
+ 
+        if (!licStatus.includes("Expired") && !licStatus.includes("Never")) {
+                    var d2 = new Date(licStatus);
+                    if (d2 < d1) {
+                                    d1 = d2;
+                    }
+                    //console.log(licStatus);
+        }
+    }
+ 
+    if (entry === 0) {
+        console.log("There are no entries in license table");
+    } else {
+        entry++;
+        console.log("There are " + entry + " license entries");
+    }
+ 
+    console.log(apNum + " RFP licenses enabled");
+    //console.log("Earliest expiring license is " + d1);
+    return apNum;
+  }
+  
+  /*
+   * Parser for web cc 
+   */ 
+   function parseLicenseForWebcc(obj){
+    var licenseArray = obj["License Table"];
+    var d1 = new Date();
+    //console.log("Date is " + d1);
+ 
+    //console.log(obj["License Table"]);
+    //console.log(licenseArray);
+    var entry = 0;
+    var apNum = 0;
+    
+    for (entry in licenseArray) {
+        //console.log("Entry ====== " + entry);
+        //console.log("License key is " + licenseArray[entry].Key);
+        //console.log("license status " + licenseArray[entry].Flags);
+        var licStatus = licenseArray[entry]["Expires(Grace period expiry)"];
+        //console.log("license expiry " + licenseArray[entry]["Expires(Grace period expiry)"]);
+        //console.log("license type is " + licenseArray[entry]["Service Type"]);
+        var string = licenseArray[entry]["Service Type"];
+        if (string.includes("WebCC") && !licStatus.includes("Expired")) {
+                    //console.log("Access point license.....");
+                    apNum = string.replace( /^\D+/g, '');
+            //console.log("Access point number....." + apNum);
+        }
+ 
+        if (!licStatus.includes("Expired") && !licStatus.includes("Never")) {
+                    var d2 = new Date(licStatus);
+                    if (d2 < d1) {
+                                    d1 = d2;
+                    }
+                    //console.log(licStatus);
+        }
+    }
+ 
+    if (entry === 0) {
+        console.log("There are no entries in license table");
+    } else {
+        entry++;
+        console.log("There are " + entry + " license entries");
+    }
+ 
+    console.log(apNum + " Web CC licenses enabled");
+    return apNum;
+  }
+  
+  /*
+   * Parser for MM VA
+   */ 
+   function parseLicenseForMMVA(obj){
+    var licenseArray = obj["License Table"];
+    var apNum = 0;
+    var d1 = new Date();
+    //console.log("Date is " + d1);
+ 
+    //console.log(obj["License Table"]);
+    //console.log(licenseArray);
+    var entry = 0;
+ 
+    for (entry in licenseArray) {
+        //console.log("Entry ====== " + entry);
+        //console.log("License key is " + licenseArray[entry].Key);
+        //console.log("license status " + licenseArray[entry].Flags);
+        var licStatus = licenseArray[entry]["Expires(Grace period expiry)"];
+        //console.log("license expiry " + licenseArray[entry]["Expires(Grace period expiry)"]);
+        //console.log("license type is " + licenseArray[entry]["Service Type"]);
+        var string = licenseArray[entry]["Service Type"];
+        if (string.includes("MM-VA") && !licStatus.includes("Expired")) {
+                    //console.log("Access point license.....");
+                    apNum = string.replace( /^\D+/g, '');
+            //console.log("Access point number....." + apNum);
+        }
+ 
+        if (!licStatus.includes("Expired") && !licStatus.includes("Never")) {
+                    var d2 = new Date(licStatus);
+                    if (d2 < d1) {
+                                    d1 = d2;
+                    }
+                    //console.log(licStatus);
+        }
+    }
+ 
+    if (entry === 0) {
+        console.log("There are no entries in license table");
+    } else {
+        entry++;
+        console.log("There are " + entry + " license entries");
+    }
+ 
+    console.log(apNum + " MM-VA licenses enabled");
+    //console.log("Earliest expiring license is " + d1);
+     return apNum;
+  }
+  
+  /*
+   * MM VA RW
+   */ 
+   function parseLicenseForMCVARW(obj) {
+ 
+    var licenseArray = obj["License Table"];
+    var apNum = 0;
+    var d1 = new Date();
+    //console.log("Date is " + d1);
+ 
+    //console.log(obj["License Table"]);
+    //console.log(licenseArray);
+    var entry = 0;
+    for (entry in licenseArray) {
+        //console.log("Entry ====== " + entry);
+        //console.log("License key is " + licenseArray[entry].Key);
+        //console.log("license status " + licenseArray[entry].Flags);
+        var licStatus = licenseArray[entry]["Expires(Grace period expiry)"];
+        //console.log("license expiry " + licenseArray[entry]["Expires(Grace period expiry)"]);
+        //console.log("license type is " + licenseArray[entry]["Service Type"]);
+        var string = licenseArray[entry]["Service Type"];
+        if (string.includes("MC-VA-RW") && !licStatus.includes("Expired")) {
+                    //console.log("Access point license.....");
+                    apNum = string.replace( /^\D+/g, '');
+            //console.log("Access point number....." + apNum);
+        }
+ 
+        if (!licStatus.includes("Expired") && !licStatus.includes("Never")) {
+                    var d2 = new Date(licStatus);
+                    if (d2 < d1) {
+                                    d1 = d2;
+                    }
+                    //console.log(licStatus);
+        }
+    }
+ 
+    if (entry === 0) {
+        console.log("There are no entries in license table");
+    } else {
+        entry++;
+        console.log("There are " + entry + " license entries");
+    }
+ 
+    console.log(apNum + " MC-VA-RW licenses enabled");
+    //console.log("Earliest expiring license is " + d1);
+    return apNum;
+  }
+  /*
+   * date helper function
+   */
+   
+function getDateBasedExpiredLicenses(obj, expiredLicenseArray, date1)
+{
+                var licenseArray = obj["License Table"];
+    var expiredLicenses = 0;
+    var d1 = new Date();
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November","December"];
+
+    //console.log("Date is " + d1);
+ 
+   //console.log(obj["License Table"]);
+    //console.log(licenseArray);
+    var entry = 0;
+ 
+    var optString = "";
+    for (entry in licenseArray) {
+        //console.log("Entry ====== " + entry);
+        //console.log("License key is " + licenseArray[entry].Key);
+        //console.log("license status " + licenseArray[entry].Flags);
+        var licStatus = licenseArray[entry]["Expires(Grace period expiry)"];
+        //console.log("license expiry " + licenseArray[entry]["Expires(Grace period expiry)"]);
+        //console.log("license type is " + licenseArray[entry]["Service Type"]);
+        var string = licenseArray[entry]["Service Type"];
+        var flags = licenseArray[entry]["Flags"];
+       
+        if (!licStatus.includes("Expired") && !licStatus.includes("Never") && flags) {
+                    var d2 = new Date(licStatus);
+                    console.log("Date to check against is " + d2);
+                    if (d2 < date1) {
+                                optString = optString + "License for ";
+                                    var arrayOfStrings = string.split(':');
+                                    // optString = optString +  arrayOfStrings[0] + " expires on " + d2 + ".";
+                                    optString = optString +  arrayOfStrings[0] + " expires on "+d2.getDate() +" "+ monthNames[d2.getMonth()] + ". ";
+                                    expiredLicenseArray.push(licenseArray[entry]);
+                    }
+                                    //console.log(licStatus);
+        }
+    }
+ 
+    if (entry === 0) {
+        console.log("There are no entries in license table");
+    } else {
+        entry++;
+        //console.log("There are " + entry + " license entries");
+    }
+ 
+    console.log(expiredLicenses + " expired licenses present");
+    return optString;
+}
+ 
+   
+  /*
+   * Get licenses expiring from
+   * a given user date
+   */
+   function getExpiringLicenses(jsonObj,date_exp)
+{
+                var expiredLicenseArray = [];
+   
+    // Get a list of date based expired licenses.
+ 
+    var resultString = getDateBasedExpiredLicenses(jsonObj, expiredLicenseArray, date_exp);
+ 
+    console.log(resultString);
+ 
+    var entry = 0;
+ 
+    var optString;
+    var licStatus = "";
+    console.log("Dumping expired license array"+date_exp);
+ 
+    console.log("")
+    for (entry in expiredLicenseArray) {
+        console.log("Entry ====== " + entry);
+        console.log("License key is " + expiredLicenseArray[entry].Key);
+        console.log("license status " + expiredLicenseArray[entry].Flags);
+        licStatus = expiredLicenseArray[entry]["Expires(Grace period expiry)"];
+        console.log("license expiry " + expiredLicenseArray[entry]["Expires(Grace period expiry)"]);
+        console.log("license type is " + expiredLicenseArray[entry]["Service Type"]);   
+    }
+    // entry++;
+    entry = expiredLicenseArray.length;
+    console.log("Entry is " + entry);
+ 
+    optString = "There are " + entry + " licenses expiring : " + resultString;
+    entry = 0;
+ 
+    return optString;
+  }
+   
+   
   function licenseFetchCall(license_flag) {
       console.log("Testing for licenses "+license_flag);
       return fetch('http://35.233.202.126:5000/exec?ip=35.162.71.116&type=show&cmd=show+license', {method: 'GET'})
         .then(response => response.text())
         .then(response => { 
           console.log("RESPONSE:"+response);
-          var jsonResp = JSON.parse(response);
-          var message = parseLicenseInfo(jsonResp, license_flag);
+          var message = "Default License Message";
 
+          var jsonResp = JSON.parse(response);
+          if (license_flag[0] == "license_summary"){
+              message = " There are " + getActiveLicenses(jsonResp) + " active licenses and " + getExpiredLicenses(jsonResp) + " expired licenses.";
+          } else if (license_flag[0] == "license_details"){
+              message = "There are " + parseLicenseForAP(jsonResp) + " active AP licenses, " +  parseLicenseForACR(jsonResp) +  " ACR Licenses, " + parseLicenseForPEF(jsonResp) + " PEF licenses, " + parseLicenseForRFP(jsonResp)
++ " RFP licenses and " + parseLicenseForWebcc(jsonResp) + " Web CC Licenses ";
+          } else if (license_flag[0] == "license_specifics"){
+            //   var date_exp = license_flag[1];
+              console.log("DATE :::: "+ JSON.stringify(license_flag[1]));
+              var date_exp = new Date(license_flag[1].toString());
+              message = "Default License Specific Message";
+               
+              message = getExpiringLicenses(jsonResp, date_exp);
+            
+          } else {
+              message = parseLicenseInfo(jsonResp, license_flag[0]);
+          }
           return Promise.resolve(message);
         }).catch( function(error){
             console.log('ERROR: ' + error);
@@ -150,6 +705,62 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
         });
   }
 
+ /* INTENT HANDLER
+  * Function: license_summary
+  * ---------------------------
+  * service Dialogflow intent  
+  * for License Summary
+  */
+  function license_summary(agent) {
+     return licenseFetchCall(['license_summary'])
+    .then( function( message ){
+      agent.add(message);
+      return Promise.resolve();
+    })
+    .catch( function( err ){
+      agent.add(`Uh oh, something happened.`);
+      return Promise.resolve();  // Don't reject again, or it might not send the reply
+    });
+  }
+
+    
+ /* INTENT HANDLER
+  * Function: license_details
+  * ---------------------------
+  * service Dialogflow intent  
+  * for License Details
+  */
+  function license_details(agent) {
+     return licenseFetchCall(['license_details'])
+    .then( function( message ){
+      agent.add(message);
+      return Promise.resolve();
+    })
+    .catch( function( err ){
+      agent.add(`Uh oh, something happened.`);
+      return Promise.resolve();  // Don't reject again, or it might not send the reply
+    });
+  }
+  
+  /* INTENT HANDLER
+  * Function: license_specifics
+  * ---------------------------
+  * service Dialogflow intent  
+  * for License specifics
+  */
+  function license_specifics(agent) {
+     var userDate = request.body.queryResult.parameters.datetime; 
+     return licenseFetchCall(['license_specifics',userDate])
+    .then( function( message ){
+      agent.add(message);
+      return Promise.resolve();
+    })
+    .catch( function( err ){
+      agent.add(`Uh oh, something happened.`);
+      return Promise.resolve();  // Don't reject again, or it might not send the reply
+    });
+  }
+  
 
  /* INTENT HANDLER
   * Function: license_count
@@ -158,7 +769,7 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   * for License Count 
   */
   function license_count(agent) {
-     return licenseFetchCall('license_count')
+     return licenseFetchCall(['license_count'])
     .then( function( message ){
       agent.add(message);
       return Promise.resolve();
@@ -176,7 +787,7 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   * for checking if licenses are enabled/valid
   */
   function license_enabled(agent) {
-     return licenseFetchCall('license_enabled')
+     return licenseFetchCall(['license_enabled'])
     .then( function( message ){
       agent.add(message);
       return Promise.resolve();
@@ -194,7 +805,7 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   * for checking when licenses expire
   */
   function license_valid(agent) {
-     return licenseFetchCall('license_valid')
+     return licenseFetchCall(['license_valid'])
     .then( function( message ){
       agent.add(message);
       return Promise.resolve();
@@ -213,7 +824,7 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   * supported by licenses
   */
   function license_ap_support(agent) {
-     return licenseFetchCall('license_ap_support')
+     return licenseFetchCall(['license_ap_support'])
     .then( function( message ){
       agent.add(message);
       return Promise.resolve();
@@ -684,7 +1295,198 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
     });
   }
 
+      /* FETCH GET CALL
+      * Function: fvShowFetchCall
+      * ---------------------------
+      * perform fetch  call to 
+      * to diable firewall visibility 
+      * configuration
+      */
+      function fvShowFetchCall() {
+        
+        return fetch('http://35.233.202.126:5000/exec?ip=35.162.71.116&type=get&cmd=fwvisibility', {method: 'GET'})
+          .then(response => response.text())
+          .then(response => { 
+              
+            console.log("RESPONSE of fvShowFetchCall:"+response);
+            var jsonResp = JSON.parse(response);
+            var message = "Default firewall visibility message";
+            //var version_text = jsonResp._data[0];
+            var fwstatus = jsonResp._data.firewall_visibility;
+            
+            //check status fw
+            if(fwstatus !== null){
+                message = "Firewall visibility is enabled on your controller";
+            } else {
+                message = "Firewall visibility is disabled on your controller";
+            }
+            return Promise.resolve(message);
+          }).catch( function(error){
+              console.log('ERROR: ' + error);
+              return Promise.reject(error);
+          });
+      }
+    
+      /* INTENT HANDLER
+      * Function: ap_essid_count
+      * ------------------------------
+      * service Dialogflow intent  
+      * for getting count of essids
+      */
+      function fv_show(agent) {
+         return fvShowFetchCall()
+        .then( function( message ){
+          agent.add(message);
+          return Promise.resolve();
+        })
+        .catch( function( err ){
+          agent.add(`Uh oh, something happened.`);
+          return Promise.resolve();  // Don't reject again, or it might not send the reply
+        });
+      }
 
+
+      /* FETCH GET CALL
+      * Function: fvEnableFetchCall
+      * ---------------------------
+      * perform fetch  call to 
+      * to diable firewall visibility 
+      * configuration
+      */
+      function fvEnableFetchCall() {
+        
+        return fetch('http://35.233.202.126:5000/exec?ip=35.162.71.116&type=set&cmd=fwvisibility', {method: 'GET'})
+          .then(response => response.text())
+          .then(response => { 
+            console.log("RESPONSE of fvEnableFetchCall:"+response);
+            var message = "Successfully enabled the firewall visibility configuration";
+            return Promise.resolve(message);
+          }).catch( function(error){
+              console.log('ERROR: ' + error);
+              return Promise.reject(error);
+          });
+      }
+    
+      /* INTENT HANDLER
+      * Function: fv_enable
+      * ------------------------------
+      * service Dialogflow intent  
+      * for getting count of essids
+      */
+      function fv_enable(agent) {
+         return fvEnableFetchCall()
+        .then( function( message ){
+          agent.add(message);
+          return Promise.resolve();
+        })
+        .catch( function( err ){
+          agent.add(`Uh oh, something happened.`);
+          return Promise.resolve();  // Don't reject again, or it might not send the reply
+        });
+      }
+
+  /*****************/
+ /*
+  * Parser for controller
+  */
+  
+  function getSwitchCount(obj) {
+    var switchArray = obj["All Switches"];
+    var switchCount = 0;
+ 
+    //console.log("Date is " + d1);
+ 
+    //console.log(obj["License Table"]);
+    //console.log(licenseArray);
+    var entry = 0;
+ 
+    for (entry in switchArray) {
+        switchCount++;
+    }
+   
+    var retString = "There is 1 Mobility Master with " + entry + " managed controllers.";
+    return retString;
+   }
+ 
+ 
+function getControllerTypes(obj) {
+ 
+    var switchArray = obj["All Switches"];
+    var switchCount = 0;
+ 
+ 
+    //console.log("Date is " + d1);
+ 
+    //console.log(obj["License Table"]);
+    //console.log(licenseArray);
+    var entry = 1;
+    //Aruba7240
+    var retString = "You have a ";
+    for (entry in switchArray) {
+        switchCount++;
+        if (entry != 0) {
+            var a = switchArray[entry]["Model"];
+            var b = a.replace( /[a-zA-Z]/g, '');
+            console.log(b);
+            retString = retString + " Aruba " + [b.slice(0, 2), " ", b.slice(2)].join('') + " ";
+                
+        }
+        //switchArray[entry]["Model"] + " ";
+    }
+ 
+    return retString;   
+}
+ 
+// console.log(getSwitchCount(jsonObj));
+// console.log(getControllerTypes(jsonObj));
+  
+  /***********************/
+
+ /* FETCH GET CALL
+  * Function: controllersFetchCall
+  * ---------------------------
+  * perform fetch get call to 
+  * to obtain controllers count
+  */
+  function controllersFetchCall() {
+      console.log("Testing for Show switches");
+      return fetch('http://35.233.202.126:5000/exec?ip=35.162.71.116&type=show&cmd=show+switches', {method: 'GET'})
+        .then(response => response.text())
+        .then(response => { 
+            var message = "Default show switches message";
+            console.log("Show Switches Resp: "+response);
+            var jsonResp = JSON.parse(response);
+            
+            message  = getSwitchCount(jsonResp)+" "+getControllerTypes(jsonResp);
+            return Promise.resolve(message);
+        }).catch( function(error){
+            console.log('ERROR: ' + error);
+            return Promise.reject(error);
+        });
+  }
+
+ /* INTENT HANDLER
+  * Function: controllers_about
+  * ------------------------------
+  * service Dialogflow intent  
+  * for getting count controllers
+  */
+  function controllers_about(agent) {
+     return controllersFetchCall()
+    .then( function( message ){
+      agent.add(message);
+      return Promise.resolve();
+    })
+    .catch( function( err ){
+      agent.add(`Uh oh, something happened.`);
+      return Promise.resolve();  // Don't reject again, or it might not send the reply
+    });
+  }
+
+
+  /****************/
+  
+  
   /*----------------------------------- README -----------------------------------*/
   // // Uncomment and edit to make your own intent handler
   // // uncomment `intentMap.set('your intent name here', yourFunctionHandler);`
@@ -728,6 +1530,12 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   intentMap.set('license_valid', license_valid);
   intentMap.set('license_enabled', license_enabled);
   intentMap.set('license_ap_support', license_ap_support);
+  //license_summary
+  intentMap.set('license_summary', license_summary);
+  //license_details
+  intentMap.set('license_details', license_details);
+  //license_specifics
+  intentMap.set('license_specifics', license_specifics);  
 
   //Show version intent Map
   intentMap.set('version_current', version_current);
@@ -745,6 +1553,15 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
   intentMap.set('ap_essid_count', ap_essid_count);
   intentMap.set('ap_essid_clients_count', ap_essid_client_count);
   intentMap.set('ap_essid_ap_association', ap_essid_ap_association);
+
+  //show switches - for controllers_about
+  intentMap.set('controllers_about', controllers_about);
+
+   //Configuration command for disabling firewall visibility, Intent Map
+   intentMap.set('fv_show', fv_show);
+   
+   //Configuration command for enabling firewall visibility, Intent Map
+   intentMap.set('fv_enable', fv_enable);
 
   //------------------------------ To Be Removed ---------------------------//
   // intentMap.set('your intent name here', yourFunctionHandler);
